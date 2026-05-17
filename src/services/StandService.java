@@ -6,27 +6,18 @@ import exceptions.StandNotFoundException;
 
 import java.util.List;
 
-/**
- * Service qui gère toutes les opérations liées aux stands.
- * C’est ici qu’on met la logique métier (ajout, recherche, assignation, etc.)
- */
+
 public class StandService {
 
     // Liste des stands chargés depuis le fichier
     private List<Stand> stands;
 
-    /**
-     * Constructeur
-     * On charge automatiquement les stands depuis le fichier au démarrage
-     */
+   
     public StandService() {
         this.stands = FileManager.loadStands();
     }
 
-    /**
-     * Ajouter un nouveau stand dans la liste
-     * On vérifie d’abord qu’il n’existe pas déjà (par ID)
-     */
+   
     public void ajouterStand(Stand s) {
 
         for (Stand st : stands) {
