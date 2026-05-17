@@ -3,6 +3,10 @@ import exceptions.UtilisateurIntrouvableException;
 import models.users.*;
 import services.UtilisateurService;
 
+import models.events.*;
+import services.PlanningService;
+import exceptions.ConflitHoraireException;
+
 import java.util.Scanner;
 
 /**
@@ -12,6 +16,9 @@ import java.util.Scanner;
 public class Main {
 
     private static final UtilisateurService service = new UtilisateurService();
+    
+    private static final PlanningService planningService = new PlanningService();
+    
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -29,6 +36,7 @@ public class Main {
                 case 3 -> supprimerUtilisateur();
                 case 4 -> rechercherUtilisateur();
                 case 5 -> service.afficherTous();
+                case 7 -> menuConferences();
                 case 6 -> afficherParRole();
                 case 0 -> { running = false; System.out.println("Au revoir !"); }
                 default -> System.out.println("⚠ Choix invalide.");
@@ -49,6 +57,7 @@ public class Main {
         System.out.println("  4. Rechercher un utilisateur");
         System.out.println("  5. Afficher tous les utilisateurs");
         System.out.println("  6. Afficher par rôle");
+        System.out.println("  7. Gestion des conférences");
         System.out.println("  0. Quitter");
         System.out.println("──────────────────────────────────");
     }
@@ -154,7 +163,81 @@ public class Main {
         String role = scanner.nextLine().trim();
         service.afficherParRole(role);
     }
+/**
+ * Menu de gestion des conférences et du planning
+ */
+private static void menuConferences() {
 
+    boolean retour = false;
+
+    while (!retour) {
+
+        System.out.println("\n══════ GESTION DES CONFERENCES ══════");
+        System.out.println("1. Ajouter une conférence");
+        System.out.println("2. Afficher planning");
+        System.out.println("3. Rechercher conférence");
+        System.out.println("4. Supprimer conférence");
+        System.out.println("0. Retour");
+
+        int choix = lireEntier("Votre choix : ");
+
+        switch (choix) {
+
+            case 1 -> ajouterConference();
+
+            case 2 -> planningService.afficherPlanning();
+
+            case 3 -> {
+                String motCle = lireChaine("Mot clé : ");
+                planningService.rechercher(motCle);
+            }
+
+            case 4 -> {
+                int id = lireEntier("ID conférence : ");
+                planningService.supprimer(id);
+            }
+
+            case 0 -> retour = true;
+
+            default -> System.out.println("⚠ Choix invalide.");
+        }
+    }
+}
+/**
+ * Ajoute une conférence au planning avec une salle associée
+ */
+private static void ajouterConference() {
+
+    int id = lireEntier("ID conférence : ");
+    String titre = lireChaine("Titre : ");
+    String theme = lireChaine("Thème : ");
+    String date = lireChaine("Date : ");
+    String heure = lireChaine("Heure : ");
+
+    System.out.println("\n--- SALLE ---");
+
+    int salleId = lireEntier("ID salle : ");
+    String nomSalle = lireChaine("Nom salle : ");
+    int capacite = lireEntier("Capacité : ");
+
+    Salle salle = new Salle(salleId, nomSalle, capacite);
+
+    Conference conference = new Conference(
+            id,
+            titre,
+            theme,
+            date,
+            heure,
+            salle
+    );
+
+    try {
+        planningService.ajouterConference(conference);
+        System.out.println("✔ Conférence ajoutée avec succès");
+    } catch (ConflitHoraireException e) {
+        System.out.println("✖ " + e.getMessage());
+    }
+}
     // ════════════════════════════════════════════════════════════════════════
     //  UTILITAIRES
     // ════════════════════════════════════════════════════════════════════════
