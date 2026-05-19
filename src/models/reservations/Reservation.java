@@ -59,12 +59,12 @@ public class Reservation {
         return annulee;
     }
 
-    public void setAnnulee(boolean annulee) {
-        this.annulee = annulee;
+    public void setAnnulee() {
+        this.annulee = true;
     }
 
     @Override
     public String toString(){
-        return String.format("La réservation du participant : %s à la conférence : %s est programmé à la date : %s, Statut : %s",getParticipant(),getConference(),getDateReservation(),isAnnulee()? "Annulée":"Active");
+        return String.format("Réservation : %s - Participant : %s - Conférence : %s - Date : %s - Statut : %s",getId(),getParticipant(),getConference(),getDateReservation(),isAnnulee()? "Annulée":"Active");
     }
 }
