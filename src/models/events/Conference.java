@@ -1,17 +1,19 @@
 package models.events;
 
+import java.time.LocalDate;
+
 public class Conference {
 
     private int id;
     private String titre;
     private String theme;
-    private String date;
+    private LocalDate date;
     private String heure;
     private Salle salle;
     private int placesDisponibles;
 
     public Conference(int id, String titre, String theme,
-                      String date, String heure,
+                      LocalDate date, String heure,
                       Salle salle) {
         this.id = id;
         this.titre = titre;
@@ -30,7 +32,7 @@ public class Conference {
         return titre;
     }
 
-    public String getDate() {
+    public LocalDate getDate() {
         return date;
     }
 

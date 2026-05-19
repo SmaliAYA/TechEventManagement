@@ -1,8 +1,10 @@
 package services;
 
+import exceptions.ReservationException;
 import models.events.Conference;
 import exceptions.ConflitHoraireException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class PlanningService {
@@ -40,6 +42,24 @@ public class PlanningService {
                 System.out.println(c);
             }
         }
+    }
+    // Rechercher par ID
+    public Conference rechercherParId(int id) throws ReservationException {
+        for (Conference c : conferences) {
+            if (c.getId() == id) return c;
+        }
+        throw new ReservationException("Conférence introuvable !");
+    }
+    //Afficher les conférences à venir
+    public boolean afficherConferencesFutures() {
+        boolean found = false;
+        for (Conference c : conferences) {
+            if (c.getDate().isAfter(LocalDate.now()) || c.getDate().isEqual(LocalDate.now())) {
+                System.out.println("[ID: " + c.getId() + "] " + c);
+                found = true;
+            }
+        }
+        return found;
     }
 
     // Supprimer conférence

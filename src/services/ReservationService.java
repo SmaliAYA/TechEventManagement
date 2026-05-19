@@ -18,10 +18,10 @@ import java.util.List;
 public class ReservationService {
 
     /* Liste de toutes les réservations du système */
-    private List<Reservation> reservations;
+    private final List<Reservation> reservations;
 
     /* Liste de tous les feedbacks du système */
-    private List<Feedback> feedbacks;
+    private final List<Feedback> feedbacks;
 
     public ReservationService() {
         this.reservations = new ArrayList<>();
@@ -32,7 +32,7 @@ public class ReservationService {
 
     public String creerReservation(Participant participant, Conference conference)
             throws ReservationException, CapacityFullException {   //Throws ReservationException  si les données sont invalides
-        if (!conference.isPlaceDisponible())     //Vérifie que la conférence a encore des places disponibles.
+        if (conference.getPlacesDisponibles() <= 0)     //Vérifie que la conférence a encore des places disponibles.
             throw new CapacityFullException("La conférence est pleine!");
         Reservation reservation = new Reservation(participant, conference, LocalDate.now());
         reservations.add(reservation);
@@ -47,7 +47,7 @@ public class ReservationService {
         throw new ReservationException("La réservation n'existe pas !");
     }
 
-    // Annule une réservation existante (idReservation) en la marquant comme annulée. On ne la supprime pas de la liste pour conserver l'historique.
+    //Annule une réservation existante (idReservation) en la marquant comme annulée. On ne la supprime pas de la liste pour conserver l'historique.
 
     public void annulerReservation(String idReservation) throws ReservationException {
         Reservation reservationTrouve = findReservationById(idReservation);
@@ -56,9 +56,7 @@ public class ReservationService {
         reservationTrouve.setAnnulee();
     }
 
-    /**
-     * Utile pour la modularité du code - réduit la complexité de l’implémentation des autres méthodes.
-     */
+    //Utile pour la modularité du code - réduit la complexité de l’implémentation des autres méthodes.
     public List<Reservation> findReservationsByParticipant(Participant participant)
             throws ReservationException {
         List<Reservation> participantReservations = new ArrayList<>();
@@ -127,57 +125,4 @@ public class ReservationService {
         // Cast en double pour éviter la division entière
         return (double) somme / confFeedbacks.size();
     }
-}
-package services;
-
-import exceptions.ReservationException;
-import models.reservations.Feedback;
-import models.reservations.Reservation;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
-public class ReservationService  {
-    private List<Reservation> reservations ;
-    private List<Feedback> feedbacks ;
-
-    public ReservationService(){
-        this.reservations = new ArrayList<>();
-        this.feedbacks = new ArrayList<>();
-    }
-
-    public String creerReservation(Participant participant, Conference conference) throws ReservationException, CapacityFullException {
-         LocalDate dateReservation = LocalDate.now();
-         if (!conference.isPlaceDisponible()) throw new CapacityFullException("La conférence est pleine!");
-         Reservation reservation = new Reservation(participant,conference,dateReservation);
-         reservations.add(reservation);
-         return reservation.toString();
-    }
-
-    public Reservation findReservationById(String id) throws ReservationException{
-        for (Reservation res : reservations){
-            if (res.getId().equals(id)) return res;
-        }
-        throw new ReservationException("La réservation n'existe pas !");
-    }
-
-    public void annulerReservation(String idReservation) throws ReservationException{
-
-        Reservation reservationTrouve = findReservationById(idReservation);
-        if (reservationTrouve.isAnnulee()) throw new ReservationException("La réservation déjà annulée!");
-        reservationTrouve.setAnnulee();
-    }
-
-    public void afficherReservationsByParticipant(Participant participant) throws ReservationException{
-        boolean empty = true;
-        for (Reservation res: reservations){
-            if (res.getParticipant().getId().equals(participant.getId())){
-                empty = false;
-                System.out.println(res.toString());
-            }
-        }
-        if (empty) throw new ReservationException("Le participant n'a pas de réservation!");
-    }
-
 }

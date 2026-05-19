@@ -1,10 +1,14 @@
 package models.reservations;
 
 import exceptions.ReservationException;
+import interfaces.Notable;
+import models.events.Conference;
+import models.users.Participant;
+
 
 import java.util.UUID;
 
-public class Feedback{
+public class Feedback   {
     private String id;
     private Participant participant;
     private Conference conference;
@@ -66,4 +70,5 @@ public class Feedback{
         return String.format("Feedback [%s] - Participant : %s Conférence : %s - Note : %d - Commentaire : %s",getId(),getParticipant(),getConference(),getNote()
                 ,getCommentaire()==null || getCommentaire().isEmpty()? "Non mentionné":getCommentaire());
     }
+
 }

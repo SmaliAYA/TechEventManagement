@@ -1,16 +1,19 @@
-import exceptions.EmailDejaUtiliseException;
-import exceptions.UtilisateurIntrouvableException;
+import exceptions.*;
+import models.reservations.Feedback;
+import models.reservations.Reservation;
 import models.users.*;
+import services.ReservationService;
 import services.UtilisateurService;
  
 import models.events.*;
 import services.PlanningService;
-import exceptions.ConflitHoraireException;
- 
+
 import models.stands.Stand;
 import services.StandService;
-import exceptions.StandNotFoundException;
- 
+
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Scanner;
  
 /**
@@ -24,12 +27,14 @@ public class Main {
     private static final PlanningService planningService = new PlanningService();
     
     private static final StandService standService = new StandService();
+
+    private static final ReservationService reservationService = new ReservationService();
     
     private static final Scanner scanner = new Scanner(System.in);
  
     public static void main(String[] args) {
         System.out.println("╔══════════════════════════════════╗");
-        System.out.println("║   Gestion des Utilisateurs       ║");
+        System.out.println("║    Gestion des Utilisateurs      ║");
         System.out.println("╚══════════════════════════════════╝");
  
         boolean running = true;
@@ -45,6 +50,7 @@ public class Main {
                 case 7 -> menuConferences();
                 case 6 -> afficherParRole();
                 case 8 -> menuStands();
+                case 9 -> menuReservations();
                 case 0 -> { running = false; System.out.println("Au revoir !"); }
                 default -> System.out.println("⚠ Choix invalide.");
             }
@@ -66,6 +72,7 @@ public class Main {
         System.out.println("  6. Afficher par rôle");
         System.out.println("  7. Gestion des conférences");
         System.out.println("  8. Gestion des stands");
+        System.out.println("  9. Gestion des réservations & feedbacks");
         System.out.println("  0. Quitter");
         System.out.println("──────────────────────────────────");
     }
@@ -221,8 +228,13 @@ public class Main {
         int id = lireEntier("ID conférence : ");
         String titre = lireChaine("Titre : ");
         String theme = lireChaine("Thème : ");
-        String date = lireChaine("Date : ");
-        String heure = lireChaine("Heure : ");
+        LocalDate date;
+        try {
+            date = LocalDate.parse(lireChaine("Date sous forme \"yyyy-MM-dd\" : "));
+        } catch (DateTimeParseException e) {
+            System.out.println("✖ Format de date invalide. Utilisez yyyy-MM-dd (ex: 2024-05-20)");
+            return;
+        }        String heure = lireChaine("Heure : ");
  
         System.out.println("\n--- SALLE ---");
  
@@ -325,6 +337,137 @@ public class Main {
  
                 default -> System.out.println("⚠ Choix invalide.");
             }
+        }
+    }
+
+    /**
+     * MENU RÉSERVATIONS & FEEDBACKS
+     */
+    private static void menuReservations() {
+        boolean retour = false;
+
+        while (!retour) {
+            System.out.println("\n══════ GESTION DES RÉSERVATIONS & FEEDBACKS ══════");
+            System.out.println("1. Créer une réservation");
+            System.out.println("2. Annuler une réservation");
+            System.out.println("3. Afficher les réservations d'un participant");
+            System.out.println("4. Afficher les réservations d'une conférence");
+            System.out.println("5. Ajouter un feedback");
+            System.out.println("6. Voir moyenne des notes d'une conférence");
+            System.out.println("0. Retour");
+
+            int choix = lireEntier("Votre choix : ");
+
+            switch (choix) {
+                case 1 -> ajouterReservation();
+                case 2 -> annulerReservation();
+                case 3 -> afficherReservationsParticipant();
+                case 4 -> afficherReservationsConference();
+                case 5 -> ajouterFeedback();
+                case 6 -> afficherMoyenneNotes();
+                case 0 -> retour = true;
+                default -> System.out.println("⚠ Choix invalide.");
+            }
+        }
+    }
+
+    private static void ajouterReservation() {
+        System.out.println("\n── Participants disponibles ──");
+        service.afficherTous();
+        System.out.println("\n── Conférences disponibles ──");
+        if (!planningService.afficherConferencesFutures()) {
+            System.out.println("✖ Aucune conférence disponible pour le moment.");
+            return;
+        }
+
+        int participantId = lireEntier("ID du participant : ");
+        int conferenceId  = lireEntier("ID de la conférence : ");
+
+        try {
+            Participant participant = (Participant) service.rechercherParId(participantId);
+            Conference  conference  = planningService.rechercherParId(conferenceId);
+
+            String result = reservationService.creerReservation(participant, conference);
+            System.out.println("✔ Réservation créée : " + result);
+
+        } catch (UtilisateurIntrouvableException e) {
+            System.out.println("✖ Participant introuvable : " + e.getMessage());
+        } catch (CapacityFullException e) {
+            System.out.println("✖ Conférence complète : " + e.getMessage());
+        } catch (ReservationException e) {
+            System.out.println("✖ " + e.getMessage());
+        } catch (ClassCastException e) {
+            System.out.println("✖ Cet utilisateur n'est pas un participant.");
+        }
+    }
+
+    private static void annulerReservation() {
+        String idReservation = lireChaine("ID de la réservation : ");
+        try {
+            reservationService.annulerReservation(idReservation);
+            System.out.println("✔ Réservation annulée avec succès.");
+        } catch (ReservationException e) {
+            System.out.println("✖ " + e.getMessage());
+        }
+    }
+
+    private static void afficherReservationsParticipant() {
+        int participantId = lireEntier("ID du participant : ");
+        try {
+            Participant participant = (Participant) service.rechercherParId(participantId);
+            List<Reservation> reservations =
+                    reservationService.findReservationsByParticipant(participant);
+            reservations.forEach(System.out::println);
+        } catch (UtilisateurIntrouvableException e) {
+            System.out.println("✖ Participant introuvable : " + e.getMessage());
+        } catch (ReservationException e) {
+            System.out.println("✖ " + e.getMessage());
+        } catch (ClassCastException e) {
+            System.out.println("✖ Cet utilisateur n'est pas un participant.");
+        }
+    }
+
+    private static void afficherReservationsConference() {
+        int conferenceId = lireEntier("ID de la conférence : ");
+        try {
+            Conference conference = planningService.rechercherParId(conferenceId);
+            reservationService.afficherReservationsByConference(conference);
+        } catch (ReservationException e) {
+            System.out.println("✖ " + e.getMessage());
+        }
+    }
+
+    private static void ajouterFeedback() {
+        int participantId = lireEntier("ID du participant : ");
+        int conferenceId  = lireEntier("ID de la conférence : ");
+        int note          = lireEntier("Note (1 à 5) : ");
+        String commentaire = lireChaine("Commentaire : ");
+
+        try {
+            Participant participant = (Participant) service.rechercherParId(participantId);
+            Conference  conference  = planningService.rechercherParId(conferenceId);
+
+            Feedback feedback = new Feedback(participant, conference, note, commentaire);
+            reservationService.ajouterFeedback(feedback);
+            System.out.println("✔ Feedback ajouté avec succès.");
+
+        } catch (UtilisateurIntrouvableException e) {
+            System.out.println("✖ Participant introuvable : " + e.getMessage());
+        } catch (ReservationException e) {
+            System.out.println("✖ " + e.getMessage());
+        } catch (ClassCastException e) {
+            System.out.println("✖ Cet utilisateur n'est pas un participant.");
+        }
+    }
+
+    private static void afficherMoyenneNotes() {
+        int conferenceId = lireEntier("ID de la conférence : ");
+        try {
+            Conference conference = planningService.rechercherParId(conferenceId);
+            double moyenne = reservationService.calculerMoyenneNotes(conference);
+            System.out.printf("⭐ Moyenne des notes : %.2f / 5%n", moyenne);
+        } catch (ReservationException e) {
+            System.out.println("✖ " + e.getMessage());
         }
     }
  
