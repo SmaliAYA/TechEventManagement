@@ -36,9 +36,9 @@ public class PlanningService {
     }
 
     // Rechercher par mot clé (String)
-    public void rechercher(String motCle) {
+    public void rechercher(String id) {
         for (Conference c : conferences) {
-            if (c.getTitre().toLowerCase().contains(motCle.toLowerCase())) {
+            if (c.getTitre().toLowerCase().contains(id.toLowerCase())) {
                 System.out.println(c);
             }
         }
