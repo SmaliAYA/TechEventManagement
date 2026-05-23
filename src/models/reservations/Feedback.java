@@ -1,7 +1,6 @@
 package models.reservations;
 
 import exceptions.ReservationException;
-import interfaces.Notable;
 import models.events.Conference;
 import models.users.Participant;
 
