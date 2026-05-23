@@ -1,0 +1,275 @@
+@startuml
+
+title Tech Event Management System - Global UML Class Diagram
+
+'==================================================
+' PACKAGE USERS
+'==================================================
+
+package "models.users" {
+
+abstract class Utilisateur {
+    - id : int
+    - nom : String
+    - prenom : String
+    - email : String
+    - motDePasse : String
+
+    + getId() : int
+    + getRole() : String
+    + toFileString() : String
+}
+
+class Participant {
+    - organisation : String
+}
+
+class Exposant {
+    - entreprise : String
+    - secteur : String
+}
+
+class Organisateur {
+    - niveau : String
+}
+
+}
+
+'==================================================
+' PACKAGE EVENTS
+'==================================================
+
+package "models.events" {
+
+class Conference {
+    - id : int
+    - titre : String
+    - theme : String
+    - date : LocalDate
+    - heure : String
+    - placesDisponibles : int
+
+    + getId() : int
+    + getTitre() : String
+    + getDate() : LocalDate
+}
+
+class Salle {
+    - id : int
+    - nom : String
+    - capacite : int
+
+    + getId() : int
+}
+
+}
+
+'==================================================
+' PACKAGE RESERVATIONS
+'==================================================
+
+package "models.reservations" {
+
+class Reservation {
+    - id : String
+    - dateReservation : LocalDate
+    - annulee : boolean
+
+    + getId() : String
+    + isAnnulee() : boolean
+    + setAnnulee() : void
+}
+
+class Feedback {
+    - commentaire : String
+    - note : int
+
+    + getNote() : int
+}
+
+}
+
+'==================================================
+' PACKAGE STANDS
+'==================================================
+
+package "models.stands" {
+
+class Stand {
+    - id : int
+    - nomEntreprise : String
+    - emplacement : String
+    - categorie : String
+
+    + getId() : int
+    + setExposantId() : void
+}
+
+}
+
+'==================================================
+' PACKAGE SERVICES
+'==================================================
+
+package "services" {
+
+class UtilisateurService {
+    + ajouterUtilisateur()
+    + modifierUtilisateur()
+    + supprimerUtilisateur()
+    + rechercherParId()
+    + afficherTous()
+}
+
+class PlanningService {
+    + ajouterConference()
+    + afficherPlanning()
+    + rechercher()
+    + rechercherParId()
+    + supprimer()
+}
+
+class ReservationService {
+    + creerReservation()
+    + annulerReservation()
+    + ajouterFeedback()
+    + calculerMoyenneNotes()
+}
+
+class StandService {
+    + ajouterStand()
+    + afficherStands()
+    + assignerExposant()
+    + chercherStand()
+    + sauvegarder()
+}
+
+}
+
+'==================================================
+' PACKAGE INTERFACES
+'==================================================
+
+package "interfaces" {
+
+interface IGestionUtilisateurs
+
+}
+
+'==================================================
+' PACKAGE EXCEPTIONS
+'==================================================
+
+package "exceptions" {
+
+class ConflitHoraireException
+
+class ReservationException
+
+class CapacityFullException
+
+class EmailDejaUtiliseException
+
+class UtilisateurIntrouvableException {
+    + UtilisateurIntrouvableException(id : int)
+    + UtilisateurIntrouvableException(email : String)
+}
+
+class StandNotFoundException
+
+}
+
+'==================================================
+' PACKAGE UTILS
+'==================================================
+
+package "utils" {
+
+class FileManager {
+    + loadStands()
+    + saveStands()
+}
+
+class StringUtils
+
+}
+
+'==================================================
+' HERITAGE
+'==================================================
+
+Utilisateur <|-- Participant
+Utilisateur <|-- Exposant
+Utilisateur <|-- Organisateur
+
+'==================================================
+' INTERFACE IMPLEMENTATION
+'==================================================
+
+UtilisateurService ..|> IGestionUtilisateurs
+
+'==================================================
+' RELATIONS + CARDINALITIES
+'==================================================
+
+Conference "0..*" --> "1" Salle : se déroule dans
+
+Participant "1" --> "0..*" Reservation : effectue
+
+Reservation "0..*" --> "1" Conference : concerne
+
+Conference "1" --> "0..*" Feedback : reçoit
+
+Exposant "1" --> "0..*" Stand : possède
+
+Feedback "0..*" --> "1" Participant : écrit par
+
+Feedback "0..*" --> "1" Conference : concerne
+
+'==================================================
+' SERVICES RELATIONS
+'==================================================
+
+UtilisateurService "1" --> "0..*" Utilisateur : gère
+
+PlanningService "1" --> "0..*" Conference : gère
+
+ReservationService "1" --> "0..*" Reservation : gère
+
+ReservationService "1" --> "0..*" Feedback : gère
+
+StandService "1" --> "0..*" Stand : gère
+
+'==================================================
+' EXCEPTION RELATIONS
+'==================================================
+
+PlanningService ..> ConflitHoraireException : throws
+
+PlanningService ..> ReservationException : throws
+
+ReservationService ..> ReservationException : throws
+
+ReservationService ..> CapacityFullException : throws
+
+StandService ..> StandNotFoundException : throws
+
+UtilisateurService ..> EmailDejaUtiliseException : throws
+
+UtilisateurService ..> UtilisateurIntrouvableException : throws
+
+'==================================================
+' UTILS RELATIONS
+'==================================================
+
+FileManager ..> Utilisateur : sauvegarde
+
+FileManager ..> Conference : sauvegarde
+
+FileManager ..> Reservation : sauvegarde
+
+FileManager ..> Stand : sauvegarde
+
+StandService ..> FileManager : utilise
+
+@enduml
