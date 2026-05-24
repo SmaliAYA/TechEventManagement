@@ -35,6 +35,10 @@ public class Conference {
     public LocalDate getDate() {
         return date;
     }
+    public String getTheme() {
+        
+        return theme;
+    }
 
     public String getHeure() {
         return heure;

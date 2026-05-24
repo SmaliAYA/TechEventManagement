@@ -85,22 +85,26 @@ public class ReservationService {
     }
 
     // ─── Feedbacks ───
+public void ajouterFeedback(Feedback feedback) throws ReservationException {
 
-    public void ajouterFeedback(Feedback feedback) throws ReservationException {
-        boolean found = false;
-        for (Reservation res : findReservationsByParticipant(feedback.getParticipant())) {
-            // On vérifie que le participant a réservé cette conférence
-            // et que la conférence est déjà passée
-            if (res.getConference().getId() == feedback.getConference().getId() &&
-                    res.getConference().getDate().isBefore(LocalDate.now())) {
-                found = true;
-                feedbacks.add(feedback);
-                break;
-            }
+    boolean found = false;
+
+    for (Reservation res : reservations) {
+
+        if (res.getParticipant().getId() == feedback.getParticipant().getId()
+                && res.getConference().getId() == feedback.getConference().getId()
+                && !res.isAnnulee()) {
+
+            found = true;
+            feedbacks.add(feedback);
+            break;
         }
-        if (!found)
-            throw new ReservationException("Vous n'avez pas assisté à cette conférence!");
     }
+
+    if (!found) {
+        throw new ReservationException("Vous n'avez pas assisté à cette conférence!");
+    }
+}
 
     // Méthode utilitaire réutilisée par calculerMoyenneNotes().
     public List<Feedback> findFeedbacksByConference(Conference conf)

@@ -4,7 +4,6 @@ import models.reservations.Reservation;
 import models.users.*;
 import services.ReservationService;
 import services.UtilisateurService;
- 
 import models.events.*;
 import services.PlanningService;
 
@@ -179,47 +178,100 @@ public class Main {
         service.afficherParRole(role);
     }
  
-    /**
-     * Menu de gestion des conférences et du planning
-     */
-    private static void menuConferences() {
- 
-        boolean retour = false;
- 
-        while (!retour) {
- 
-            System.out.println("\n══════ GESTION DES CONFERENCES ══════");
-            System.out.println("1. Ajouter une conférence");
-            System.out.println("2. Afficher planning");
-            System.out.println("3. Rechercher conférence");
-            System.out.println("4. Supprimer conférence");
-            System.out.println("0. Retour");
- 
-            int choix = lireEntier("Votre choix : ");
- 
-            switch (choix) {
- 
-                case 1 -> ajouterConference();
- 
-                case 2 -> planningService.afficherPlanning();
- 
-                case 3 -> {
-                    String motCle = lireChaine("Mot clé : ");
-                    planningService.rechercher(motCle);
-                }
- 
-                case 4 -> {
-                    int id = lireEntier("ID conférence : ");
-                    planningService.supprimer(id);
-                }
- 
-                case 0 -> retour = true;
- 
-                default -> System.out.println("⚠ Choix invalide.");
+  /**
+ * Menu de gestion des conférences et du planning
+ */
+private static void menuConferences() {
+
+    boolean retour = false;
+
+    while (!retour) {
+
+        System.out.println("\n══════ GESTION DES CONFERENCES ══════");
+        System.out.println("1. Ajouter une conférence");
+        System.out.println("2. Afficher planning");
+        System.out.println("3. Rechercher conférence (titre)");
+        System.out.println("4. Rechercher conférence (ID)");
+        System.out.println("5. Supprimer conférence");
+        System.out.println("6. Conférences à venir");
+        System.out.println("0. Retour");
+
+        int choix = lireEntier("Votre choix : ");
+
+        switch (choix) {
+
+            case 1 -> {
+                System.out.println("\n➕ Création d'une nouvelle conférence...");
+
+       
+                    ajouterConference();}
+                
+
+            case 2 -> {
+                System.out.println("\n📅 PLANNING DES CONFÉRENCES");
+                System.out.println("================================");
+                planningService.afficherPlanning();
+                System.out.println("================================");
             }
+
+            case 3 -> {
+                System.out.println("\n Recherche par titre ");
+                String motCle = lireChaine("Titre : ");
+                planningService.rechercher(motCle);
+            }
+
+            case 4 -> {
+                System.out.println("\n Recherche par ID...");
+
+                try {
+                    int id = lireEntier("ID conférence : ");
+                    Conference c = planningService.rechercherParId(id);
+
+                    System.out.println("✔ Conférence trouvée :");
+                    System.out.println("--------------------------------");
+                    System.out.println("ID      : " + c.getId());
+                    System.out.println("Titre   : " + c.getTitre());
+                    System.out.println("Thème   : " + c.getTheme());
+                    System.out.println("Date    : " + c.getDate());
+                    System.out.println("Heure   : " + c.getHeure());
+                    System.out.println("Salle   : " + c.getSalle().getNom());
+                    System.out.println("Places  : " + c.getPlacesDisponibles());
+                    System.out.println("--------------------------------");
+
+                } catch (ReservationException e) {
+                    System.out.println("❌ " + e.getMessage());
+                }
+            }
+
+            case 5 -> {
+                System.out.println("\n🗑 Suppression d'une conférence...");
+                int id = lireEntier("ID conférence : ");
+                planningService.supprimer(id);
+                System.out.println("✔ Suppression effectuée");
+            }
+
+            case 6 -> {
+                System.out.println("\n CONFÉRENCES À VENIR");
+                System.out.println("--------------------------------");
+
+                boolean found = planningService.afficherConferencesFutures();
+
+                if (!found) {
+                    System.out.println("⚠ Aucune conférence planifiée pour le futur.");
+                }
+
+                System.out.println("--------------------------------");
+            }
+
+            case 0 -> {
+                System.out.println("↩ Retour au menu principal...");
+                retour = true;
+            }
+
+            default -> System.out.println("⚠ Choix invalide. Veuillez entrer un nombre entre 0 et 6.");
         }
     }
- 
+}
     /**
      * Ajoute une conférence au planning avec une salle associée
      */
